@@ -25,6 +25,13 @@ const LOG_FILE = path.join(ROOT_DIR, 'gem-tenders.log');
 const JSON_CACHE_FILE = path.join(ROOT_DIR, 'today_gem_tenders.json');
 const CSV_CACHE_FILE = path.join(ROOT_DIR, 'today_gem_tenders.csv');
 
+// Health Check & Render Keep-Alive Configuration (Default: every 3 minutes)
+const HEALTH_CHECK_INTERVAL_MS = parseInt(
+  process.env.HEALTH_CHECK_INTERVAL_MS || process.env.PING_INTERVAL_MS || String(3 * 60 * 1000),
+  10
+);
+const DISABLE_SELF_PING = process.env.DISABLE_SELF_PING === 'true';
+
 // ---------------------------------------------------------------------------
 // 1. Console & File Logging Engine
 // ---------------------------------------------------------------------------
@@ -1555,6 +1562,25 @@ const server = http.createServer(async (req, res) => {
     }));
   }
 
+  // API: Health Check & Keep-Alive (/health, /healthz, /ping, /api/health)
+  if (pathname === '/health' || pathname === '/healthz' || pathname === '/ping' || pathname === '/api/health') {
+    const memoryUsage = process.memoryUsage();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({
+      status: 'healthy',
+      service: 'BidWatch GeM Tenders Portal',
+      timestamp: new Date().toISOString(),
+      uptimeSeconds: Math.floor(process.uptime()),
+      renderExternalUrl: process.env.RENDER_EXTERNAL_URL || null,
+      pingIntervalMinutes: Math.round(HEALTH_CHECK_INTERVAL_MS / 60000 * 10) / 10,
+      memory: {
+        rssMB: Math.round((memoryUsage.rss / 1024 / 1024) * 100) / 100,
+        heapUsedMB: Math.round((memoryUsage.heapUsed / 1024 / 1024) * 100) / 100
+      },
+      cachedBidsCount: (preloaded24hData && preloaded24hData.bids) ? preloaded24hData.bids.length : 0
+    }));
+  }
+
   // 404
   logger.warn('HTTP-404', `Path not found: ${pathname}`);
   res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -1612,6 +1638,71 @@ async function runCliMode() {
 }
 
 // ---------------------------------------------------------------------------
+// 5.1 Keep-Alive & 3-Minute Health Check Engine (Render Auto-Wakeup)
+// ---------------------------------------------------------------------------
+
+function getSelfPingUrl() {
+  const custom = process.env.HEALTH_CHECK_URL || process.env.APP_URL || process.env.RENDER_EXTERNAL_URL;
+  if (custom && custom.trim()) {
+    const trimmed = custom.trim().replace(/\/+$/, '');
+    if (trimmed.endsWith('/health') || trimmed.endsWith('/healthz') || trimmed.endsWith('/ping') || trimmed.endsWith('/api/health')) {
+      return trimmed;
+    }
+    return `${trimmed}/api/health`;
+  }
+  return `http://127.0.0.1:${PORT}/api/health`;
+}
+
+let healthCheckTimer = null;
+
+function performHealthCheckPing() {
+  const targetUrl = getSelfPingUrl();
+  const isHttps = targetUrl.startsWith('https://');
+  const clientLib = isHttps ? https : http;
+
+  const req = clientLib.get(targetUrl, {
+    headers: {
+      'User-Agent': 'BidWatch-KeepAlive/1.0',
+      'Accept': 'application/json',
+    },
+    timeout: 15000,
+  }, (res) => {
+    res.resume(); // Drain stream to release memory and socket
+    logger.info('KEEPALIVE', `Health check ping OK -> ${targetUrl} [${res.statusCode}]`);
+  });
+
+  req.on('error', (err) => {
+    logger.warn('KEEPALIVE', `Health check notice for ${targetUrl}: ${err.message}`);
+  });
+
+  req.on('timeout', () => {
+    req.destroy();
+    logger.warn('KEEPALIVE', `Health check timed out for ${targetUrl}`);
+  });
+}
+
+function startHealthCheckCron() {
+  if (healthCheckTimer) return;
+  const targetUrl = getSelfPingUrl();
+  const minutes = (HEALTH_CHECK_INTERVAL_MS / 60000).toFixed(1);
+
+  logger.info('KEEPALIVE', `Automated keepalive scheduled every ${minutes} min -> ${targetUrl}`);
+  console.log(`💓 Auto Health Check & Keep-Alive : Scheduled every ${minutes} min (Target: ${targetUrl})`);
+
+  // Initial ping 15 seconds after server boot
+  const initialTimeout = setTimeout(() => {
+    performHealthCheckPing();
+  }, 15000);
+  if (initialTimeout.unref) initialTimeout.unref();
+
+  // Periodic recurring keepalive ping
+  healthCheckTimer = setInterval(() => {
+    performHealthCheckPing();
+  }, HEALTH_CHECK_INTERVAL_MS);
+  if (healthCheckTimer.unref) healthCheckTimer.unref();
+}
+
+// ---------------------------------------------------------------------------
 // 6. Entrypoint
 // ---------------------------------------------------------------------------
 
@@ -1641,6 +1732,11 @@ if (process.argv.includes('--cli') || process.argv.includes('--export')) {
     console.log(`📡 Connected to official GeM portal (bidplus.gem.gov.in)`);
     console.log(`📜 Persistent logs saved to  : ${LOG_FILE}`);
     console.log('=============================================================\n');
+
+    // Start automated 3-minute health check self-ping (Render keep-alive)
+    if (!DISABLE_SELF_PING) {
+      startHealthCheckCron();
+    }
 
     if (preloaded24hData && preloaded24hData.bids && preloaded24hData.bids.length > 0 && !process.argv.includes('--sync')) {
       const bids = preloaded24hData.bids;

@@ -134,16 +134,41 @@ You can run the backend scraper directly from the command line without launching
 
 ---
 
+## ☁️ Deploying on Render (Free Tier Keep-Alive)
+
+Render's free tier spins down web services after 15 minutes of inactivity. BidWatch includes an **automated 3-minute self-ping engine** that keeps your instance awake 24/7 by pinging its public endpoint before Render's 15-minute sleep timer expires.
+
+### Render Configuration
+
+1. **Create New Web Service** on [Render.com](https://render.com) and connect this repository.
+2. Fill in the following deployment settings:
+
+| Setting | Value |
+| :--- | :--- |
+| **Language / Environment** | `Node` |
+| **Build Command** | `cd client && npm install && npm run build` |
+| **Start Command** | `node gem-tenders.js` |
+| **Health Check Path** | `/health` (or `/api/health`) |
+
+3. **How the 3-Minute Keep-Alive Works**:
+   - Render automatically injects `RENDER_EXTERNAL_URL` (e.g. `https://bidwatch.onrender.com`).
+   - Every **3 minutes**, `gem-tenders.js` automatically issues an HTTP `GET` request to `${RENDER_EXTERNAL_URL}/api/health`.
+   - Render's edge router registers this incoming traffic, resetting the 15-minute inactivity countdown and keeping your service online.
+   - You can also optionally add a free external monitor (e.g. [UptimeRobot](https://uptimerobot.com) or [Cron-job.org](https://cron-job.org)) pointing to `https://<your-service>.onrender.com/health` every 3-5 minutes as a redundant backup.
+
+---
+
 ## 📡 API Endpoints
 
 The backend exposes the following endpoints:
 
 | Endpoint | Method | Query Parameters | Description |
 | :--- | :--- | :--- | :--- |
+| `/health` / `/api/health` | `GET` | — | Lightweight health check & system metrics (uptime, memory, status) |
+| `/healthz` / `/ping` | `GET` | — | Quick ping / liveness endpoints |
 | `/api/tenders` | `GET` | `mode=24h` (default) | Returns all tenders published in the last 24 hours |
 | `/api/tenders` | `GET` | `page=1&search=...&type=all&sort=Bid-Start-Date-Latest` | Paginated search across active GeM bids |
 | `/api/logs` | `GET` | — | Returns recent system activity logs |
-| `/healthz` | `GET` | — | Nginx health check endpoint (in Docker) |
 
 ---
 
@@ -152,7 +177,11 @@ The backend exposes the following endpoints:
 ### Backend Configuration
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `PORT` | `7700` | Port for the Node backend server |
+| `PORT` | `7700` | Port for the Node backend server (Render sets this automatically) |
+| `HEALTH_CHECK_INTERVAL_MS` | `180000` | Interval between keep-alive pings in milliseconds (Default: 3 minutes) |
+| `RENDER_EXTERNAL_URL` | Auto on Render | Public URL of the service (e.g. `https://bidwatch.onrender.com`) |
+| `HEALTH_CHECK_URL` | Optional | Custom external URL to ping if not using Render default |
+| `DISABLE_SELF_PING` | `false` | Set to `true` to disable background self-pings |
 | `NODE_ENV` | `development` | Set to `production` when deployed |
 
 ### Frontend Configuration (`client/.env`)
