@@ -1,0 +1,46 @@
+services:
+  # ==========================================
+  # 🏛️ GeM Tenders Scraper & API Backend
+  # ==========================================
+  gem-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gem-backend
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    environment:
+      - PORT=7700
+      - NODE_ENV=production
+    volumes:
+      - ./gem-tenders.log:/app/gem-tenders.log
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:7700/api/logs', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - bidwatch-net
+
+  # ==========================================
+  # ⚡ React 19 + Vite Frontend (Nginx Proxy)
+  # ==========================================
+  gem-frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: gem-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      gem-backend:
+        condition: service_healthy
+    networks:
+      - bidwatch-net
+
+networks:
+  bidwatch-net:
+    driver: bridge

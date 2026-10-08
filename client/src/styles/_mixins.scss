@@ -1,0 +1,72 @@
+@use './variables' as *;
+
+// ==========================================
+// Responsive Breakpoint Mixins
+// ==========================================
+@mixin mobile-xs {
+  @media (max-width: #{$bp-xs - 1px}) {
+    @content;
+  }
+}
+
+@mixin mobile {
+  @media (max-width: #{$bp-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{$bp-md}) and (max-width: #{$bp-lg - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{$bp-lg}) {
+    @content;
+  }
+}
+
+// ==========================================
+// Safe Area Insets (Mobile Devices)
+// ==========================================
+@mixin safe-area-top($fallback: 0px) {
+  padding-top: $fallback;
+  padding-top: max($fallback, env(safe-area-inset-top, $fallback));
+}
+
+@mixin safe-area-bottom($fallback: 0px) {
+  padding-bottom: $fallback;
+  padding-bottom: max($fallback, env(safe-area-inset-bottom, $fallback));
+}
+
+// ==========================================
+// Glassmorphism & Surface Mixins
+// ==========================================
+@mixin glass-panel($bg: rgba(17, 24, 39, 0.75), $blur: 12px) {
+  background: $bg;
+  backdrop-filter: blur($blur);
+  -webkit-backdrop-filter: blur($blur);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@mixin card-glow($color: rgba(59, 130, 246, 0.15)) {
+  box-shadow: 0 4px 20px -2px $color, 0 2px 6px -1px rgba(0, 0, 0, 0.4);
+}
+
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+}

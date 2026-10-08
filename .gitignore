@@ -1,0 +1,57 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+gem-tenders.log
+
+# Diagnostic / Runtime data & caches
+today_gem_tenders.json
+today_gem_tenders.csv
+
+# Dependency directories
+node_modules/
+*/node_modules/
+
+# Build and production outputs
+dist
+dist-ssr
+build/
+*.local
+
+# Environment files (preserve templates)
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Vite / Build tool cache
+.vite/
+.cache/
+*.tsbuildinfo
+
+# Editor / IDE directories and files
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

@@ -1,0 +1,15 @@
+{
+  "short_name": "GeM Tenders",
+  "name": "GeM Tenders Portal & Live Shortlisting Engine",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "display": "standalone"
+}

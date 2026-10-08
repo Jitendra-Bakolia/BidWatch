@@ -1,0 +1,101 @@
+@use './variables' as *;
+@use './mixins' as *;
+
+// ==========================================
+// GeM Components Specific Styles
+// ==========================================
+
+// Typography Helpers
+.font-mono-num {
+  font-family: $font-mono;
+  font-feature-settings: 'tnum' on, 'zero' on;
+}
+
+.font-display-title {
+  font-family: $font-display;
+}
+
+// Custom Scrollbar for tables and terminal
+.terminal-scroll {
+  @include custom-scrollbar;
+}
+
+.table-scroll-container {
+  @include custom-scrollbar;
+  border-radius: 12px;
+  border: 1px solid $color-border;
+  background: $color-card;
+  overflow-x: auto;
+}
+
+// KPI Badges & Cards
+.kpi-card-glow-blue {
+  &:hover {
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 20px -2px rgba(59, 130, 246, 0.15);
+  }
+}
+
+.kpi-card-glow-amber {
+  &:hover {
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: 0 4px 20px -2px rgba(245, 158, 11, 0.15);
+  }
+}
+
+.kpi-card-glow-purple {
+  &:hover {
+    border-color: rgba(168, 85, 247, 0.4);
+    box-shadow: 0 4px 20px -2px rgba(168, 85, 247, 0.15);
+  }
+}
+
+.kpi-card-glow-rose {
+  &:hover {
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 4px 20px -2px rgba(239, 68, 68, 0.15);
+  }
+}
+
+// Tag badges
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tag-bid {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.tag-ra {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.tag-24h {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.tag-closing {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.tag-high-value {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}

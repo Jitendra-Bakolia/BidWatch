@@ -1,0 +1,31 @@
+@use './variables' as *;
+@use './mixins' as *;
+
+// ==========================================
+// Mobile Adaptations & Navigation
+// ==========================================
+
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: $z-mobile-bar;
+  background: rgba(11, 15, 25, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  @include safe-area-bottom(8px);
+}
+
+.mobile-nav-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal-content;
+  pointer-events: none;
+  transition: opacity $transition-normal;
+
+  &.open {
+    pointer-events: auto;
+  }
+}

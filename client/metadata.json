@@ -1,0 +1,6 @@
+{
+  "name": "GeM Tenders Portal — Live Shortlisting & Intelligence Engine",
+  "description": "High-fidelity responsive React dashboard for Government e-Marketplace (GeM) tenders, 24-hour live bid tracking, Reverse Auction filtering, notes, and CSV export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
